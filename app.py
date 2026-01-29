@@ -603,7 +603,7 @@ class User(Base):
     name: Mapped[str] = mapped_column(String(50))
     
     # Ryšys: Vienas User turi daug Post (List["Post"])
-    posts: Mapped[List["Post"]] = relationship(back_populates="user", cascade="all, delete-orphan")
+    posteliai: Mapped[List["Post"]] = relationship(back_populates="useriuks", cascade="all, delete-orphan")
 
     def __repr__(self) -> str:
         return f"User(id={self.id!r}, name={self.name!r})"
@@ -618,7 +618,7 @@ class Post(Base):
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
     
     # Ryšys atgal: Kiekvienas Post priklauso vienam User
-    user: Mapped["User"] = relationship(back_populates="posts")
+    useriuks: Mapped["User"] = relationship(back_populates="posteliai")
 
     def __repr__(self) -> str:
         return f"Post(id={self.id!r}, title={self.title!r})"
@@ -635,18 +635,18 @@ with Session(engine) as session:
     # Galima pridėti per sąrašą arba priskiriant user objektą
     post1 = Post(title="Pirmas įrašas")
     post2 = Post(title="Antras įrašas")
-    new_user.posts.append(post1)
-    new_user.posts.append(post2)
+    new_user.posteliai.append(post1)
+    new_user.posteliai.append(post2)
 
     # Pakanka pridėti tėvinį objektą, vaikai prisidės automatiškai
     session.add(new_user)
     session.commit()
 
     # 3. Nuskaitome duomenis (naudojame selectinload optimizacijai)
-    stmt = select(User).options(selectinload(User.posts)).where(User.name == "Jonas")
+    stmt = select(User).options(selectinload(User.posteliai)).where(User.name == "Jonas")
     user_from_db = session.scalars(stmt).first()
 
     if user_from_db:
         print(f"Vartotojas: {user_from_db.name}")
-        for post in user_from_db.posts:
+        for post in user_from_db.posteliai:
             print(f"  - {post.title}")
